@@ -124,13 +124,18 @@ has been near gets a single timestamp, and stays protected for
 `RecentPlayerProtectionSeconds` after the last sighting. The table is pruned every pass, so
 it cannot grow without bound.
 
-**One Harmony patch, and why.** Admin chat commands need the server to see chat messages.
-A dedicated server runs its own `Chat` component and has therefore already registered the
-`"ChatMessage"` RPC before any plugin loads, and Valheim keeps only one handler per RPC
-name — so registering our own would displace the game's. A prefix on `Chat.RPC_ChatMessage`
-is the only way to observe chat without taking something away. It returns void, never
-blocks the original, swallows all failures, and is applied only when `EnableChatCommands`
-is on. Everything else in the plugin uses public game APIs.
+**One Harmony patch, and why.** Admin chat commands need the server to observe chat.
+Current Valheim sends chat to each player *individually* rather than broadcasting it
+(`Chat.CheckPermissionsAndSendChatMessageRPCsAsync` walks `ZNet.GetPlayerList()`), so a
+dedicated server is never an addressee and `Chat.RPC_ChatMessage` never runs there. The one
+place a server does see chat is when it forwards it, so the patch is a postfix on
+`ZRoutedRpc.RouteRPC`. It runs after routing completes, parses a copy of the payload, and
+swallows all failures, so it cannot affect anyone's chat. It is applied only when
+`EnableChatCommands` is on.
+
+**Chat commands need another player online.** A player's own message is handled locally and
+never routed off their client, so when the admin is alone the server sees nothing to act on.
+**Use the command file if you administer the server alone** - it always works.
 
 **Announcements to vanilla clients.** Warnings are delivered through the `Message` routed
 RPC that every `Player` registers on its own character in `Player.Awake`, which lands in
@@ -224,7 +229,7 @@ manager or FTP client.
 ### In-game chat, for admins
 
 Any player whose account is in `adminlist.txt` can type commands straight into chat on a
-**vanilla client**:
+**vanilla client**. Note the limitation below: this needs at least one *other* player online.
 
 ```
 !autocleanup status
@@ -235,7 +240,12 @@ admin check uses the connection's authenticated platform ID, not the name in the
 so it cannot be spoofed. Non-admins typing the prefix are ignored.
 
 Change the prefix with `ChatCommandPrefix`, or turn the whole channel off with
-`EnableChatCommands = false`.
+`EnableChatCommands = false` (which also means no Harmony patch is applied at all).
+
+> **Limitation.** Valheim sends chat to each player individually, and a player's own message
+> is never routed off their client. A dedicated server therefore only observes chat while at
+> least one *other* player is connected. If you administer the server on your own, use the
+> command file — it always works.
 
 ### Console command
 
@@ -474,9 +484,9 @@ narrower scan. Please open an issue.
 - **Clients:** vanilla, unmodified. Nothing to install.
 - **Valheim:** built against the current Mono build. No Harmony patches, so ordinary game
   updates rarely break it.
-- **Other server mods:** one Harmony patch only — a prefix on `Chat.RPC_ChatMessage`, and
-  only when `EnableChatCommands` is on. It never blocks the original method, so it coexists
-  with other chat mods. Set `EnableChatCommands = false` to apply no patches at all.
+- **Other server mods:** one Harmony patch only — a postfix on `ZRoutedRpc.RouteRPC`, and
+  only when `EnableChatCommands` is on. It runs after routing and changes nothing, so it
+  coexists with other chat mods. Set `EnableChatCommands = false` to apply no patches at all.
 - **Dependencies:** BepInEx 5 only. No Jötunn, no ServerSync.
 
 ---

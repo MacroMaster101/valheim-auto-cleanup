@@ -8,9 +8,13 @@ namespace ValheimAutoCleanup.Server
     /// with no mod on the client.
     ///
     /// Messages reach this class from <see cref="Patches.ChatMessagePatch"/>, which explains
-    /// why a Harmony patch is unavoidable here: a dedicated server runs its own <c>Chat</c>
-    /// component, so the "ChatMessage" routed RPC is already registered by the game, and
-    /// Valheim allows only one handler per RPC name.
+    /// why a Harmony patch on the routing layer is the only workable hook: current Valheim
+    /// sends chat to each player individually rather than broadcasting it, so a dedicated
+    /// server is never a recipient and never runs <c>Chat.RPC_ChatMessage</c>.
+    ///
+    /// A consequence of that design is that the server observes the SAME message once per
+    /// connected player. Commands are therefore de-duplicated here: without it, a single
+    /// typed command would run once for every player online.
     ///
     /// SECURITY
     /// --------
@@ -24,10 +28,21 @@ namespace ValheimAutoCleanup.Server
     {
         private const int MaxChatReplyLines = 3;
 
+        /// <summary>
+        /// How long a command stays de-duplicated. The per-player copies of one message are
+        /// routed within the same frame, so this only has to span a moment; it is generous
+        /// to also absorb an accidental double-send.
+        /// </summary>
+        private const float DuplicateWindowSeconds = 3f;
+
         private readonly ManualLogSource _log;
         private readonly PluginConfig _config;
         private readonly Commands _commands;
         private readonly Broadcaster _broadcaster;
+
+        private long _lastSenderPeerId;
+        private string _lastText;
+        private float _lastHandledAt = float.NegativeInfinity;
 
         internal ChatCommandListener(
             ManualLogSource log, PluginConfig config, Commands commands, Broadcaster broadcaster)
@@ -39,11 +54,10 @@ namespace ValheimAutoCleanup.Server
         }
 
         /// <summary>
-        /// Handles one chat message. Called from the Harmony prefix on
-        /// <c>Chat.RPC_ChatMessage</c>; returns immediately for anything that is not an admin
-        /// command, which is the overwhelming majority of messages.
+        /// Handles one observed chat message. Returns immediately for anything that is not an
+        /// admin command, which is the overwhelming majority of messages.
         /// </summary>
-        internal void OnChatMessage(long senderPeerId, string text)
+        internal void OnChatMessage(long senderPeerId, long messageId, string text)
         {
             try
             {
@@ -60,6 +74,12 @@ namespace ValheimAutoCleanup.Server
 
                 var trimmed = text.Trim();
                 if (!trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                // The same command arrives once per connected player; run it only once.
+                if (IsDuplicate(senderPeerId, trimmed))
                 {
                     return;
                 }
@@ -89,6 +109,27 @@ namespace ValheimAutoCleanup.Server
             {
                 _log.LogWarning("Failed to handle a chat command: " + ex.Message);
             }
+        }
+
+        /// <summary>
+        /// True when this exact command from this exact sender was already handled a moment
+        /// ago, which is how the per-player copies of a single chat message present.
+        /// </summary>
+        private bool IsDuplicate(long senderPeerId, string trimmed)
+        {
+            var now = UnityEngine.Time.realtimeSinceStartup;
+
+            if (senderPeerId == _lastSenderPeerId &&
+                string.Equals(trimmed, _lastText, StringComparison.Ordinal) &&
+                now - _lastHandledAt < DuplicateWindowSeconds)
+            {
+                return true;
+            }
+
+            _lastSenderPeerId = senderPeerId;
+            _lastText = trimmed;
+            _lastHandledAt = now;
+            return false;
         }
 
         /// <summary>

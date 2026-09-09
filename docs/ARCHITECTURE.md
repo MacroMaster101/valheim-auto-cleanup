@@ -80,28 +80,43 @@ no patch:
 | Remove an object | `ZNetScene.Destroy` / `ZDOMan.DestroyZDO`, both public |
 | Player positions | `ZNet.GetConnectedPeers()`, public |
 | Announce to players | Invoke the vanilla `"Message"` routed RPC on the player's character |
-| Receive admin chat | **The one Harmony patch** — a prefix on `Chat.RPC_ChatMessage` |
+| Receive admin chat | **The one Harmony patch** — a postfix on `ZRoutedRpc.RouteRPC` |
 | Admin check | `ZNet.IsAdmin(hostName)`, public |
 
 The single patch lives in `Patches/ChatMessagePatch.cs` and is applied only on the server,
-and only when `EnableChatCommands` is on. It is a **prefix** that returns void, never
-reports the call as handled, and swallows every failure, so the original method always runs
-exactly as it would have.
+and only when `EnableChatCommands` is on. It is a **postfix** on `ZRoutedRpc.RouteRPC` that
+parses a copy of the payload and swallows every failure, so routing is already complete
+before it runs and it cannot delay, alter or drop anyone's chat.
 
-It exists because the patch-free approach genuinely does not work. That approach was
-implemented first: register a handler for the `"ChatMessage"` routed RPC on the server. It
-fails because **a dedicated server runs its own `Chat` component** — the headless server log
-prints the `/w [text] - Whisper` and `/s [text] - Shout` help lines that only `Chat.Awake`
-emits — so `Chat.Awake` has already registered `RPC_ChatMessage` before any plugin loads.
-`ZRoutedRpc.Register` keeps one delegate per name and overwrites silently, so registering
-ours would *displace* the game's handler rather than run beside it. Valheim exposes no way
-to add a second listener and no event to subscribe to.
+Two earlier approaches were implemented and both failed, for separate reasons found by
+reading the game:
 
-A prefix is used rather than a postfix because `Chat.OnNewChatMessage` reaches
-`RelationsManager.CheckPermissionAsync`, which dereferences
-`PlatformManager.DistributionPlatform.LocalUser`; whether that is initialised on a headless
-server is not something this plugin should have to depend on. Running first makes command
-handling independent of it.
+1. **Registering a handler for the "ChatMessage" routed RPC.** A dedicated server creates
+   its own `Chat` component — the headless log prints the `/w [text] - Whisper` help lines
+   that only `Chat.Awake` emits — so that RPC name is already registered before any plugin
+   loads, and `ZRoutedRpc.Register` keeps only one delegate per name. Registering ours would
+   displace the game's.
+
+2. **Patching `Chat.RPC_ChatMessage`.** More decisively, current Valheim does not broadcast
+   chat at all. `Chat.CheckPermissionsAndSendChatMessageRPCsAsync` walks
+   `ZNet.GetPlayerList()` and calls `InvokeRoutedRPC(thatPlayersId, "ChatMessage", ...)` once
+   per player; the target is never `Everybody` (0). `ZRoutedRpc.RPC_RoutedRPC` invokes a
+   local handler only for messages addressed to this peer or to everybody, so
+   `Chat.RPC_ChatMessage` never executes on a dedicated server no matter what is patched
+   onto it.
+
+What the server *does* do with chat is forward it, and `RouteRPC` is called under an
+`m_server` guard — the only place a dedicated server reliably sees a chat message.
+
+**A limitation follows from the same design.** `InvokeRoutedRPC` routes only when
+`targetPeerID != m_id`, so a player's own copy of their message is handled locally and never
+leaves their client. When the admin is the only player online, no chat packet reaches the
+server at all and there is nothing to hook. Chat commands therefore work only while at least
+one *other* player is connected; the command file is the channel that always works.
+
+Because the client sends one copy per online player, the server observes the same command
+once per player. `ChatCommandListener` de-duplicates on (sender, text) within a short window,
+without which a single typed command would run once for every player online.
 
 One private field is read through cached reflection, because Valheim exposes no public
 accessor for it:

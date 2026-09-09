@@ -255,6 +255,11 @@ namespace ValheimAutoCleanup
                 _log.LogInfo(
                     "Admin chat commands are active. An admin can type '" + _config.ChatCommandPrefix +
                     " help' in game.");
+                _log.LogInfo(
+                    "Note: Valheim sends chat to each player individually, and a player's own " +
+                    "message is never routed off their client. A dedicated server therefore only " +
+                    "observes chat while at least one OTHER player is connected. The command file " +
+                    "is the channel that always works.");
             }
             catch (Exception ex)
             {

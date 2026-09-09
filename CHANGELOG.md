@@ -51,10 +51,12 @@ First release.
 ### Design notes
 
 - **Exactly one Harmony patch.** Everything except admin chat uses public game APIs plus
-  one cached private-field read, with a documented fallback. The one patch is a prefix
-  on `Chat.RPC_ChatMessage`, applied only when `EnableChatCommands` is on; it never blocks
-  the original method. It is unavoidable because a dedicated server registers the
-  "ChatMessage" RPC itself and Valheim keeps only one handler per RPC name.
+  one cached private-field read, with a documented fallback. The one patch is a postfix on
+  `ZRoutedRpc.RouteRPC`, applied only when `EnableChatCommands` is on; it runs after routing
+  completes and parses a copy of the payload, so it cannot affect anyone's chat. Hooking
+  `Chat.RPC_ChatMessage` does not work: current Valheim sends chat to each player
+  individually rather than broadcasting it, so a dedicated server is never an addressee and
+  that method never runs there.
 - **No new persistent data.** Item age reuses Valheim's own `s_spawnTime` ZDO field, the
   one `ItemDrop.Awake` already writes and `ItemDrop.GetTimeSinceSpawned` already reads. The
   world save format is untouched, and no player or character files are modified.
@@ -75,6 +77,10 @@ First release.
 - Items whose spawn stamp is missing (very old saves) report an unknown age and are never
   removed.
 - Base detection is proximity to player-built pieces, not a true building-footprint test.
+- **In-game admin chat commands require at least one other player online.** A player's own
+  chat message is handled locally and never routed off their client, so when the admin is
+  alone the server never receives it. The command file works in every case and is the
+  recommended channel for solo administration.
 - Statistics and history are in memory and reset when the server restarts.
 - Cleanup of world objects that exist only as unloaded ZDOs is handled, but there is no
   region-scoped or biome-scoped rule set in this version.
