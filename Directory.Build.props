@@ -32,7 +32,37 @@
 
   <PropertyGroup>
     <ValheimManaged Condition="'$(ValheimManaged)' == '' AND '$(ValheimInstall)' != ''">$(ValheimInstall)/valheim_Data/Managed</ValheimManaged>
-    <BepInExCore   Condition="'$(BepInExCore)'   == '' AND '$(ValheimInstall)' != ''">$(ValheimInstall)/BepInEx/core</BepInExCore>
+  </PropertyGroup>
+
+  <!--
+    BepInEx is resolved separately from the game on purpose. It does not always live
+    inside the Valheim folder: Steam can move the game to another library without taking
+    BepInEx with it, and mod managers such as r2modman keep BepInEx in a profile directory
+    of their own. Only BepInEx.dll and 0Harmony.dll are needed, and both are stable.
+  -->
+  <PropertyGroup Condition="'$(BepInExCore)' == '' AND '$(BEPINEX_PATH)' != ''">
+    <BepInExCore>$(BEPINEX_PATH)</BepInExCore>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(BepInExCore)' == ''">
+    <_BepCandidate0>$(ValheimInstall)/BepInEx/core</_BepCandidate0>
+    <_BepCandidate1>$(_VhCandidate1)\BepInEx\core</_BepCandidate1>
+    <_BepCandidate2>$(_VhCandidate2)\BepInEx\core</_BepCandidate2>
+    <_BepCandidate3>$(_VhCandidate3)\BepInEx\core</_BepCandidate3>
+    <_BepCandidate4>$(_VhCandidate4)\BepInEx\core</_BepCandidate4>
+    <_BepCandidate5>$(_VhCandidate5)/BepInEx/core</_BepCandidate5>
+    <_BepCandidate6>$(_VhCandidate6)/BepInEx/core</_BepCandidate6>
+    <_BepCandidate7>$(_VhCandidate7)/BepInEx/core</_BepCandidate7>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(BepInExCore)' == ''">
+    <BepInExCore Condition="Exists('$(_BepCandidate0)/BepInEx.dll')">$(_BepCandidate0)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate1)\BepInEx.dll')">$(_BepCandidate1)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate2)\BepInEx.dll')">$(_BepCandidate2)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate3)\BepInEx.dll')">$(_BepCandidate3)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate4)\BepInEx.dll')">$(_BepCandidate4)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate5)/BepInEx.dll')">$(_BepCandidate5)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate6)/BepInEx.dll')">$(_BepCandidate6)</BepInExCore>
+    <BepInExCore Condition="'$(BepInExCore)' == '' AND Exists('$(_BepCandidate7)/BepInEx.dll')">$(_BepCandidate7)</BepInExCore>
   </PropertyGroup>
 
 </Project>

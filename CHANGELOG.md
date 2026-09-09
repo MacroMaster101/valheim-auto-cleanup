@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Pinned the Thunderstore dependency to `denikson-BepInExPack_Valheim-5.4.2350`, released
+  alongside Valheim 1.0.
+- The build now locates BepInEx independently of the game folder, and honours a
+  `BepInExCore` property or `BEPINEX_PATH` environment variable. Steam can move Valheim to
+  another library without taking BepInEx with it, and mod managers keep BepInEx in their own
+  profile directory; the previous build assumed the two always sat together.
+
+### Verified
+
+- Compatible with **Valheim 1.0.7 (network version 39)**, up from 0.221.12 (network 36).
+  All 113 API symbols the plugin depends on are present, and the six behaviours it relies on
+  were re-checked in the shipped assembly: the `s_spawnTime` stamp in `ItemDrop.Awake`, the
+  ownership gate in `ZDOMan.DestroyZDO`, the `ZNetScene.Destroy` path, world time freezing on
+  an empty server, per-player chat routing, and the server-side reference position.
+
 ## [1.0.0] - 2026-09-09
 
 First release.

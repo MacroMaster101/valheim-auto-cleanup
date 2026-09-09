@@ -482,8 +482,9 @@ narrower scan. Please open an issue.
 ## Compatibility
 
 - **Clients:** vanilla, unmodified. Nothing to install.
-- **Valheim:** built against the current Mono build. No Harmony patches, so ordinary game
-  updates rarely break it.
+- **Valheim:** verified against **1.0.7 (network version 39)**. Every game API the plugin
+  uses, and every behaviour it relies on, is re-checked against the shipped assembly rather
+  than assumed.
 - **Other server mods:** one Harmony patch only — a postfix on `ZRoutedRpc.RouteRPC`, and
   only when `EnableChatCommands` is on. It runs after routing and changes nothing, so it
   coexists with other chat mods. Set `EnableChatCommands = false` to apply no patches at all.

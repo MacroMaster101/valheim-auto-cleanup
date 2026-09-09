@@ -9,7 +9,12 @@
 
   The folder you point at must contain:
       valheim_Data/Managed/assembly_valheim.dll
-      BepInEx/core/BepInEx.dll
+
+  BepInEx is located separately, because it does not always live inside the game folder:
+  Steam can move Valheim to another library without taking BepInEx with it, and mod
+  managers such as r2modman keep BepInEx in their own profile directory. Set
+  <BepInExCore> below (or the BEPINEX_PATH environment variable) if it is not found
+  automatically. It must contain BepInEx.dll and 0Harmony.dll.
 
   Game and BepInEx assemblies are referenced with Private=false: they are NEVER
   copied into the build output and MUST NEVER be redistributed.
@@ -21,6 +26,9 @@
 
     <!-- Windows (secondary Steam library) -->
     <!-- <ValheimInstall>D:\SteamLibrary\steamapps\common\Valheim</ValheimInstall> -->
+
+    <!-- Only needed when BepInEx is not inside the Valheim folder above. -->
+    <!-- <BepInExCore>C:\Program Files (x86)\Steam\steamapps\common\Valheim\BepInEx\core</BepInExCore> -->
 
     <!-- Linux -->
     <!-- <ValheimInstall>$(HOME)/.steam/steam/steamapps/common/Valheim</ValheimInstall> -->
