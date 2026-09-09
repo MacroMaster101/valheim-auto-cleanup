@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Installation and configuration help
+    url: https://github.com/MacroMaster101/valheim-auto-cleanup#readme
+    about: The README covers installation, every setting, the commands, and troubleshooting.
+  - name: Installing on DatHost
+    url: https://github.com/MacroMaster101/valheim-auto-cleanup/blob/main/docs/DATHOST.md
+    about: Step-by-step walkthrough for DatHost-hosted servers.

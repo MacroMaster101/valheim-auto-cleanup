@@ -1,0 +1,80 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      Valheim runs on Unity's Mono (.NET Framework 4.x profile) and BepInEx 5.
+      net472 is the profile the game's own assemblies are built against.
+    -->
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ValheimAutoCleanup</AssemblyName>
+    <RootNamespace>ValheimAutoCleanup</RootNamespace>
+    <Product>Valheim Auto Cleanup</Product>
+    <Company>MacroMaster101</Company>
+    <Authors>MacroMaster101</Authors>
+    <Description>Server-side automatic dropped-item cleanup for Valheim dedicated servers. Vanilla clients supported.</Description>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Copyright>Copyright (c) 2026 MacroMaster101</Copyright>
+
+    <!-- Deterministic, dependency-free output: exactly one DLL. -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <DebugType>portable</DebugType>
+    <Deterministic>true</Deterministic>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <!-- Reference assemblies for net472 so the project builds on any OS / CI without VS. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CheckValheimPath" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(ValheimManaged)' == '' Or !Exists('$(ValheimManaged)/assembly_valheim.dll')"
+           Text="Could not locate your Valheim installation. Copy Environment.props.example to Environment.props and set &lt;ValheimInstall&gt;, or set the VALHEIM_INSTALL environment variable. Looked in: '$(ValheimManaged)'." />
+    <Error Condition="!Exists('$(BepInExCore)/BepInEx.dll')"
+           Text="Could not locate BepInEx. Install the BepInEx pack for Valheim into your game folder. Looked in: '$(BepInExCore)'." />
+  </Target>
+
+  <!--
+    Game / BepInEx references.
+    Private=false  => never copied to the output folder.
+    These are COPYRIGHTED third-party binaries and must never be redistributed.
+
+    0Harmony is referenced for exactly one patch - see Patches/ChatMessagePatch.cs, which
+    documents why no patch-free alternative exists. Nothing else in the plugin patches
+    anything.
+  -->
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExCore)/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExCore)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_valheim">
+      <HintPath>$(ValheimManaged)/assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>$(ValheimManaged)/assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ValheimManaged)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ValheimManaged)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

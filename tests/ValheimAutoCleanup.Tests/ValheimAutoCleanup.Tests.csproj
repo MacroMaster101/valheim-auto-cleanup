@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      The tests run on a normal .NET runtime, not on Unity's Mono. They can do that because
+      the policy layer they exercise is deliberately free of Unity and Valheim types: only
+      the files listed below are compiled in, and none of them reference the game.
+      Nothing here needs a Valheim installation.
+    -->
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>ValheimAutoCleanup.Tests</AssemblyName>
+    <RootNamespace>ValheimAutoCleanup.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../src/ValheimAutoCleanup/Policy/PolicyTypes.cs" Link="Policy/PolicyTypes.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Policy/NameSet.cs" Link="Policy/NameSet.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Policy/PolicySettings.cs" Link="Policy/PolicySettings.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Policy/ConfigLimits.cs" Link="Policy/ConfigLimits.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Policy/ItemCleanupPolicy.cs" Link="Policy/ItemCleanupPolicy.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Models/CleanupDecision.cs" Link="Models/CleanupDecision.cs" />
+  </ItemGroup>
+
+</Project>

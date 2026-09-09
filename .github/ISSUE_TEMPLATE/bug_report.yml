@@ -1,0 +1,96 @@
+name: Bug report
+description: Something is not behaving the way the README says it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check the two most common non-bugs:
+
+        - **Nothing is being removed.** Is `DryRun = true`? That is the shipped default and
+          it never removes anything. Also check the summary line for `TooYoung` — item age
+          is measured in *world* time, which only advances while a player is connected.
+        - **Nothing is being removed and the summary shows `PlayerProtected`.** Someone is
+          standing within `PlayerProtectionRadius`, or was within the last
+          `RecentPlayerProtectionSeconds`.
+
+        Run `preview` (see the README's Commands section) — its "Kept" breakdown names the
+        exact rule responsible, which is usually the whole answer.
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: valheim-version
+    attributes:
+      label: Valheim version
+      description: The server log prints this, e.g. "Valheim version: l-0.221.12 (network version 36)".
+      placeholder: "l-0.221.12 (network version 36)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: server-type
+    attributes:
+      label: Server type
+      options:
+        - Dedicated server
+        - Listen host (a player hosting the world)
+    validations:
+      required: true
+
+  - type: input
+    id: host
+    attributes:
+      label: Host / platform
+      description: Self-hosted Windows, self-hosted Linux, DatHost, Nitrado, Docker, ...
+      placeholder: "DatHost (Linux)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log
+      description: >
+        Every line containing "Valheim Auto Cleanup", plus anything around it that looks
+        relevant. The startup banner and a cleanup summary line are the most useful.
+      render: text
+      placeholder: |
+        [Info : Valheim Auto Cleanup] Dedicated server detected.
+        [Info : Valheim Auto Cleanup] Prefab catalogue built: ...
+        [Info : Valheim Auto Cleanup] Cleanup complete (DRY RUN): Scanned=... Drops=... WouldDelete=...
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: >
+        The contents of BepInEx/config/io.github.macromaster101.valheimautocleanup.cfg, or at least every
+        setting you changed from the default.
+      render: ini
+    validations:
+      required: true
+
+  - type: textarea
+    id: other-mods
+    attributes:
+      label: Other server plugins
+      description: BepInEx prints "N plugins to load" and then lists them.
+      placeholder: "Only this one / Server Devcommands 1.97, ..."
+    validations:
+      required: false

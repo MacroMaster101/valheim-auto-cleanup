@@ -1,0 +1,20 @@
+# Normalise line endings so Windows and Linux contributors don't fight the diff.
+* text=auto eol=lf
+
+*.sln       text eol=crlf
+*.csproj    text eol=lf
+*.props     text eol=lf
+*.cs        text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.json      text eol=lf
+*.cfg       text eol=lf
+*.sh        text eol=lf
+*.ps1       text eol=crlf
+
+*.png       binary
+*.dll       binary
+*.zip       binary
+
+# Keep generated/vendored noise out of language stats and diffs.
+docs/example-config/* linguist-generated=true

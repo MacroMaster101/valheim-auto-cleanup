@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest something the plugin should be able to do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Worth knowing before you write: this plugin errs heavily toward keeping items, and
+        toward doing less on the network layer rather than more. Proposals that add a new
+        way for an item to be removed will be weighed against the risk of removing something
+        a player wanted.
+
+        The "Room for later versions" section of
+        [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) lists ideas already considered.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you actually hitting?
+      description: Describe the situation on your server, not the solution you have in mind.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Can any existing setting get you close?
+      description: >
+        Whitelist, BlacklistOnly, ProtectNearPlayerBase, MinimumItemAgeSeconds and
+        OnlyCleanupWhenServerEmpty cover a lot of ground between them.
+    validations:
+      required: false

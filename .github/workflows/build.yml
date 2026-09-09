@@ -1,0 +1,76 @@
+name: build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # The policy layer contains no Unity or Valheim types, so it compiles and runs on a
+  # plain .NET runtime. This job needs no game files and is the real gate on CI.
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore tests/ValheimAutoCleanup.Tests/ValheimAutoCleanup.Tests.csproj
+
+      - name: Test
+        run: >-
+          dotnet test tests/ValheimAutoCleanup.Tests/ValheimAutoCleanup.Tests.csproj
+          --configuration Release
+          --logger "console;verbosity=normal"
+
+  # Compiling the plugin itself needs assembly_valheim.dll and the BepInEx core, which are
+  # copyrighted and are deliberately NOT in this repository. This job therefore only runs
+  # where a self-hosted runner has a legal Valheim install and exposes VALHEIM_INSTALL.
+  #
+  # To enable it, set the repository variable HAVE_VALHEIM to 'true' and point
+  # VALHEIM_INSTALL at the game folder on the runner.
+  plugin:
+    name: Plugin assembly
+    if: vars.HAVE_VALHEIM == 'true'
+    runs-on: ${{ vars.VALHEIM_RUNNER || 'self-hosted' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build
+        env:
+          VALHEIM_INSTALL: ${{ vars.VALHEIM_INSTALL }}
+        run: dotnet build src/ValheimAutoCleanup/ValheimAutoCleanup.csproj -c Release --nologo
+
+      - name: Confirm no game binaries were copied into the output
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=src/ValheimAutoCleanup/bin/Release
+          if find "$out" \( -iname 'assembly_*' -o -iname 'UnityEngine*' \
+                            -o -iname 'BepInEx*' -o -iname '0Harmony*' \) | grep -q .; then
+            echo "A game or loader binary was copied into the build output." >&2
+            exit 1
+          fi
+          echo "Output is clean:"
+          ls -la "$out"
+
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: ValheimAutoCleanup
+          path: |
+            src/ValheimAutoCleanup/bin/Release/ValheimAutoCleanup.dll
+            README.md
+            CHANGELOG.md
+            manifest.json
+            icon.png
+          if-no-files-found: error

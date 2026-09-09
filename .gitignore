@@ -1,0 +1,33 @@
+# Local machine paths - never commit these.
+Environment.props
+
+# Build output
+bin/
+obj/
+artifacts/
+*.user
+*.suo
+*.userprefs
+
+# Packaging output
+dist/
+*.zip
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.DotSettings.user
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Never commit copyrighted game or loader binaries.
+assembly_valheim.dll
+assembly_utils.dll
+Assembly-CSharp.dll
+UnityEngine*.dll
+BepInEx.dll
+0Harmony*.dll
+Splatform*.dll

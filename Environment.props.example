@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copy this file to "Environment.props" (same folder) and set the path to YOUR OWN
+  legal Valheim installation. "Environment.props" is git-ignored so your local
+  machine paths never get committed.
+
+  Alternatively, set the VALHEIM_INSTALL environment variable and skip this file
+  entirely. Directory.Build.props also auto-detects a few common Steam locations.
+
+  The folder you point at must contain:
+      valheim_Data/Managed/assembly_valheim.dll
+      BepInEx/core/BepInEx.dll
+
+  Game and BepInEx assemblies are referenced with Private=false: they are NEVER
+  copied into the build output and MUST NEVER be redistributed.
+-->
+<Project>
+  <PropertyGroup>
+    <!-- Windows (Steam default) -->
+    <ValheimInstall>C:\Program Files (x86)\Steam\steamapps\common\Valheim</ValheimInstall>
+
+    <!-- Windows (secondary Steam library) -->
+    <!-- <ValheimInstall>D:\SteamLibrary\steamapps\common\Valheim</ValheimInstall> -->
+
+    <!-- Linux -->
+    <!-- <ValheimInstall>$(HOME)/.steam/steam/steamapps/common/Valheim</ValheimInstall> -->
+
+    <!-- macOS -->
+    <!-- <ValheimInstall>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</ValheimInstall> -->
+  </PropertyGroup>
+</Project>

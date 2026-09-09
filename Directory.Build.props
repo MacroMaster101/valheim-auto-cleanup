@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- 1. Local developer override (git-ignored). -->
+  <Import Project="$(MSBuildThisFileDirectory)Environment.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Environment.props')" />
+
+  <!-- 2. VALHEIM_INSTALL environment variable. -->
+  <PropertyGroup Condition="'$(ValheimInstall)' == '' AND '$(VALHEIM_INSTALL)' != ''">
+    <ValheimInstall>$(VALHEIM_INSTALL)</ValheimInstall>
+  </PropertyGroup>
+
+  <!-- 3. Best-effort auto-detection of common install locations. -->
+  <PropertyGroup Condition="'$(ValheimInstall)' == ''">
+    <_VhCandidate1>C:\Program Files (x86)\Steam\steamapps\common\Valheim</_VhCandidate1>
+    <_VhCandidate2>C:\Program Files\Steam\steamapps\common\Valheim</_VhCandidate2>
+    <_VhCandidate3>D:\SteamLibrary\steamapps\common\Valheim</_VhCandidate3>
+    <_VhCandidate4>D:\Steam\steamapps\common\Valheim</_VhCandidate4>
+    <_VhCandidate5>$(HOME)/.steam/steam/steamapps/common/Valheim</_VhCandidate5>
+    <_VhCandidate6>$(HOME)/.local/share/Steam/steamapps/common/Valheim</_VhCandidate6>
+    <_VhCandidate7>$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim</_VhCandidate7>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(ValheimInstall)' == ''">
+    <ValheimInstall Condition="Exists('$(_VhCandidate1)\valheim_Data\Managed\assembly_valheim.dll')">$(_VhCandidate1)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == '' AND Exists('$(_VhCandidate2)\valheim_Data\Managed\assembly_valheim.dll')">$(_VhCandidate2)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == '' AND Exists('$(_VhCandidate3)\valheim_Data\Managed\assembly_valheim.dll')">$(_VhCandidate3)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == '' AND Exists('$(_VhCandidate4)\valheim_Data\Managed\assembly_valheim.dll')">$(_VhCandidate4)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == '' AND Exists('$(_VhCandidate5)/valheim_Data/Managed/assembly_valheim.dll')">$(_VhCandidate5)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == '' AND Exists('$(_VhCandidate6)/valheim_Data/Managed/assembly_valheim.dll')">$(_VhCandidate6)</ValheimInstall>
+    <ValheimInstall Condition="'$(ValheimInstall)' == '' AND Exists('$(_VhCandidate7)/valheim_Data/Managed/assembly_valheim.dll')">$(_VhCandidate7)</ValheimInstall>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ValheimManaged Condition="'$(ValheimManaged)' == '' AND '$(ValheimInstall)' != ''">$(ValheimInstall)/valheim_Data/Managed</ValheimManaged>
+    <BepInExCore   Condition="'$(BepInExCore)'   == '' AND '$(ValheimInstall)' != ''">$(ValheimInstall)/BepInEx/core</BepInExCore>
+  </PropertyGroup>
+
+</Project>

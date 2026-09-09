@@ -1,0 +1,9 @@
+{
+  "name": "ValheimAutoCleanup",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/MacroMaster101/valheim-auto-cleanup",
+  "description": "Server-side automatic cleanup of old dropped items for Valheim dedicated servers. Vanilla clients supported.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2333"
+  ]
+}
