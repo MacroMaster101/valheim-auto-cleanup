@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.0.1] - 2026-09-12
 
 ### Changed
 
@@ -114,4 +114,5 @@ First release.
 - Cleanup of world objects that exist only as unloaded ZDOs is handled, but there is no
   region-scoped or biome-scoped rule set in this version.
 
+[1.0.1]: https://github.com/MacroMaster101/valheim-auto-cleanup/releases/tag/v1.0.1
 [1.0.0]: https://github.com/MacroMaster101/valheim-auto-cleanup/releases/tag/v1.0.0

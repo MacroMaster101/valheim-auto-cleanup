@@ -19,7 +19,7 @@
 | **Name** | Valheim Auto Cleanup |
 | **GUID** | `io.github.macromaster101.valheimautocleanup` |
 | **Author** | MacroMaster101 |
-| **Version** | 1.0.0 |
+| **Version** | 1.0.1 |
 | **Licence** | MIT |
 | **Requires** | BepInEx 5 (`denikson-BepInExPack_Valheim`) on the **server only** |
 
@@ -560,7 +560,7 @@ Build a Thunderstore package:
 ./build/package.sh          # or: pwsh ./build/package.ps1
 ```
 
-which produces `dist/ValheimAutoCleanup-1.0.0.zip` containing exactly
+which produces `dist/ValheimAutoCleanup-1.0.1.zip` containing exactly
 `ValheimAutoCleanup.dll`, `README.md`, `CHANGELOG.md`, `manifest.json` and `icon.png`.
 
 ---

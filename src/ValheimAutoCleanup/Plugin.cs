@@ -14,7 +14,7 @@ namespace ValheimAutoCleanup
     {
         public const string Guid = "io.github.macromaster101.valheimautocleanup";
         public const string Name = "Valheim Auto Cleanup";
-        public const string Version = "1.0.0";
+        public const string Version = "1.0.1";
     }
 
     /// <summary>

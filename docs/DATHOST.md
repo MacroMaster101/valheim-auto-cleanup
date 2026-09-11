@@ -20,7 +20,7 @@ Confirm it worked: **File Manager** should now show a `valheim/BepInEx/` folder 
 
 **Either** — through Mods & Plugins:
 
-1. **Mods & Plugins** → upload `ValheimAutoCleanup-1.0.0.zip`.
+1. **Mods & Plugins** → upload `ValheimAutoCleanup-1.0.1.zip`.
 2. **Save and Reboot.**
 
 **Or** — through the File Manager, which is the more predictable route:
@@ -47,8 +47,8 @@ valheim/
 Open **Console** and look for:
 
 ```
-[Info   :   BepInEx] Loading [Valheim Auto Cleanup 1.0.0]
-[Info   :Valheim Auto Cleanup] Valheim Auto Cleanup 1.0.0 loaded. Waiting for the world to start.
+[Info   :   BepInEx] Loading [Valheim Auto Cleanup 1.0.1]
+[Info   :Valheim Auto Cleanup] Valheim Auto Cleanup 1.0.1 loaded. Waiting for the world to start.
 [Info   :Valheim Auto Cleanup] Dedicated server detected.
 [Info   :Valheim Auto Cleanup] Server-side cleanup active.
 [Info   :Valheim Auto Cleanup] Dry-run mode is active. No items will be removed.
