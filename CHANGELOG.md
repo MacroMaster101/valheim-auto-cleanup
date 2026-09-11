@@ -17,11 +17,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Verified
 
-- Compatible with **Valheim 1.0.7 (network version 39)**, up from 0.221.12 (network 36).
-  All 113 API symbols the plugin depends on are present, and the six behaviours it relies on
-  were re-checked in the shipped assembly: the `s_spawnTime` stamp in `ItemDrop.Awake`, the
-  ownership gate in `ZDOMan.DestroyZDO`, the `ZNetScene.Destroy` path, world time freezing on
-  an empty server, per-player chat routing, and the server-side reference position.
+- Compatible with **Valheim 1.0.12 (network version 40)**, via 1.0.7 (network 39), up from
+  0.221.12 (network 36). All 113 API symbols the plugin depends on are present, it builds
+  clean against the 1.0.12 assembly, and the behaviours it relies on were re-checked in the
+  shipped IL: the `s_spawnTime` stamp in `ItemDrop.Awake`, the ownership gate in
+  `ZDOMan.DestroyZDO`, the `ZNetScene.Destroy` path, world time freezing on an empty server,
+  per-player chat routing, the `m_server` guard around `RouteRPC`, and the chat RPC's
+  parameter signature.
+- 1.0.12 replaced the world save format with a chunked loader (`ZDOMan.LoadChunks`). It still
+  loads every ZDO into `ZDOMan.m_objectsByID` at startup, so the scanner is unaffected.
 
 ## [1.0.0] - 2026-09-09
 

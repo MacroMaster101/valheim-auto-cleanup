@@ -482,7 +482,7 @@ narrower scan. Please open an issue.
 ## Compatibility
 
 - **Clients:** vanilla, unmodified. Nothing to install.
-- **Valheim:** verified against **1.0.7 (network version 39)**. Every game API the plugin
+- **Valheim:** verified against **1.0.12 (network version 40)**. Every game API the plugin
   uses, and every behaviour it relies on, is re-checked against the shipped assembly rather
   than assumed.
 - **Other server mods:** one Harmony patch only — a postfix on `ZRoutedRpc.RouteRPC`, and
