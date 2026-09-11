@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The format follows
 
 ### Changed
 
+- Extended the `ImportantItemWhitelist` defaults for Valheim 1.0. Added `FrozenKingDrop`
+  (Sacrificial Blood, from Kall Fimbulbringer, the boss 1.0 introduced), progression and quest
+  keys (`DvergrKey`, `BloodGoldKey`, `HildirKey_forestcrypt`, `HildirKey_mountaincave`,
+  `HildirKey_plainsfortress`), and the three Dyrnwyn sword fragments. Every name was verified
+  against the 1.0.12 game data and localization. Existing configs keep their saved list, since
+  BepInEx does not overwrite saved values; add the names manually or regenerate the config.
 - Pinned the Thunderstore dependency to `denikson-BepInExPack_Valheim-5.4.2350`, released
   alongside Valheim 1.0.
 - The build now locates BepInEx independently of the game folder, and honours a

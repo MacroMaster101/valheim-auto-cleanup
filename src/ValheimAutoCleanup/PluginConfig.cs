@@ -19,9 +19,15 @@ namespace ValheimAutoCleanup
         /// against the shipped game data before being listed; nothing here is guessed.
         /// </summary>
         private const string DefaultImportantItems =
-            "DragonEgg,Wishbone,CryptKey,DvergrKeyFragment,YagluthDrop,QueenDrop,FaderDrop," +
+            // Boss progression drops and boss trophies.
+            "DragonEgg,Wishbone,YagluthDrop,QueenDrop,FaderDrop,FrozenKingDrop," +
             "TrophyEikthyr,TrophyTheElder,TrophyBonemass,TrophyDragonQueen,TrophyGoblinKing," +
-            "TrophySeekerQueen,TrophyFader,ShieldCore,BellFragment,MorgenHeart";
+            "TrophySeekerQueen,TrophyFader,ShieldCore,BellFragment,MorgenHeart," +
+            // Keys: single-use progression and quest items that are hard or impossible to replace.
+            "CryptKey,DvergrKeyFragment,DvergrKey,BloodGoldKey," +
+            "HildirKey_forestcrypt,HildirKey_mountaincave,HildirKey_plainsfortress," +
+            // Dyrnwyn sword fragments: rare quest pieces, each needed to assemble the weapon.
+            "DyrnwynBladeFragment,DyrnwynHiltFragment,DyrnwynTipFragment";
 
         private readonly ConfigFile _file;
         private readonly ManualLogSource _log;
@@ -155,7 +161,7 @@ namespace ValheimAutoCleanup
                 "Apply the ImportantItemWhitelist below.");
             _importantItemWhitelist = file.Bind(itemProtection, "ImportantItemWhitelist", DefaultImportantItems,
                 "Comma-separated prefab names that must never be removed. Case-insensitive, whitespace trimmed. " +
-                "The defaults are boss progression items and boss trophies.");
+                "The defaults are boss progression items, boss trophies, progression keys and quest fragments.");
             _whitelist = file.Bind(itemProtection, "Whitelist", "",
                 "Comma-separated prefab names that must never be removed, for example Iron,BlackMetal. " +
                 "This list is an absolute veto and is checked before every other rule.");

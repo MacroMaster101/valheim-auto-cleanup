@@ -350,11 +350,25 @@ Name lists are comma-separated prefab names, matched case-insensitively with sur
 whitespace trimmed; empty entries are ignored. `Whitelist = Iron, blackmetal ,,` is three
 tokens, two of which are real, and `IRON` matches.
 
-Every default in `ImportantItemWhitelist` was checked against the shipped game data:
-`DragonEgg`, `Wishbone`, `CryptKey`, `DvergrKeyFragment`, `YagluthDrop`, `QueenDrop`,
-`FaderDrop`, `TrophyEikthyr`, `TrophyTheElder`, `TrophyBonemass`, `TrophyDragonQueen`,
-`TrophyGoblinKing`, `TrophySeekerQueen`, `TrophyFader`, `ShieldCore`, `BellFragment`,
-`MorgenHeart`. (The swamp key is `CryptKey` — there is no prefab called `SwampKey`.)
+Every default in `ImportantItemWhitelist` was checked against the shipped game data,
+most recently Valheim 1.0.12:
+
+- **Boss drops and trophies:** `DragonEgg`, `Wishbone`, `YagluthDrop`, `QueenDrop`,
+  `FaderDrop`, `FrozenKingDrop`, `TrophyEikthyr`, `TrophyTheElder`, `TrophyBonemass`,
+  `TrophyDragonQueen`, `TrophyGoblinKing`, `TrophySeekerQueen`, `TrophyFader`, `ShieldCore`,
+  `BellFragment`, `MorgenHeart`
+- **Keys:** `CryptKey`, `DvergrKeyFragment`, `DvergrKey`, `BloodGoldKey`,
+  `HildirKey_forestcrypt`, `HildirKey_mountaincave`, `HildirKey_plainsfortress`
+- **Quest fragments:** `DyrnwynBladeFragment`, `DyrnwynHiltFragment`, `DyrnwynTipFragment`
+
+`FrozenKingDrop` is Sacrificial Blood, dropped by Kall Fimbulbringer, the boss added in 1.0;
+1.0.12 ships no trophy for it. The swamp key is `CryptKey` — there is no prefab called
+`SwampKey`.
+
+**Upgrading keeps your old list.** BepInEx never overwrites a value already saved in your
+config, so an existing install keeps whatever `ImportantItemWhitelist` it was first created
+with. To pick up new defaults, add the names yourself, or delete the config file and let the
+plugin write a fresh one.
 
 **Ammo is deliberately not equipment.** Spent arrows are the single most common form of
 litter, so `ProtectEquipment` does not cover them. Add specific arrows to `Whitelist` if
