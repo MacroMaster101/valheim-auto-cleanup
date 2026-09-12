@@ -16,7 +16,7 @@ namespace ValheimAutoCleanup
     ///      This is the only channel that works on a stock headless server, because
     ///      valheim_server.exe never reads standard input - there is no server console to
     ///      type into.
-    ///   2. In-game chat from an authenticated admin (vanilla client, no mod needed).
+    ///   2. In-game chat from a verified admin (vanilla client, no mod needed; off by default).
     ///   3. A Terminal console command, which is reachable on a listen host and through
     ///      mods that forward client console input to the server.
     /// </summary>

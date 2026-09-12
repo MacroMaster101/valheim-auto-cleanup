@@ -27,7 +27,9 @@
     <Compile Include="../../src/ValheimAutoCleanup/Policy/PolicySettings.cs" Link="Policy/PolicySettings.cs" />
     <Compile Include="../../src/ValheimAutoCleanup/Policy/ConfigLimits.cs" Link="Policy/ConfigLimits.cs" />
     <Compile Include="../../src/ValheimAutoCleanup/Policy/ItemCleanupPolicy.cs" Link="Policy/ItemCleanupPolicy.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Policy/ChatSenderCheck.cs" Link="Policy/ChatSenderCheck.cs" />
     <Compile Include="../../src/ValheimAutoCleanup/Models/CleanupDecision.cs" Link="Models/CleanupDecision.cs" />
+    <Compile Include="../../src/ValheimAutoCleanup/Models/CleanupResult.cs" Link="Models/CleanupResult.cs" />
   </ItemGroup>
 
 </Project>

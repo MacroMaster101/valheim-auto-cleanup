@@ -4,6 +4,37 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-09-12
+
+### Security
+
+- **Fixed: a modified client could run admin chat commands by posing as an admin.** Valheim
+  reads a routed RPC's sender ID from the packet the client wrote
+  (`RoutedRPCData.Deserialize`), and `ZRoutedRpc.RPC_RoutedRPC` never compares it with the
+  connection the packet arrived on. The admin check trusted that ID, so a player with a
+  modified client could put an online admin's ID on a chat message and run cleanup commands
+  such as `disable` (which is saved to the config) or `now`. It could not switch `DryRun`
+  off, change other settings, or reach anything outside this plugin. A new prefix on
+  `ZRoutedRpc.RPC_RoutedRPC` now records the connection each message arrived on, a chat
+  command runs only when its claimed sender is that connection (`ChatSenderCheck`), and the
+  admin check uses the verified connection. Affects 1.0.0 and 1.0.1 with
+  `EnableChatCommands = true`, which was the default.
+- `EnableChatCommands` is now **off by default**. The command file is the recommended
+  channel on a rented server. Existing configs keep their saved value.
+
+### Added
+
+- **A cleanup report after every pass**, on by default (`LogCleanupReport`). It is the same
+  breakdown `preview` prints — what was removed (or, in a dry run, what would be), grouped by
+  item, and why the rest was kept — so you can see what the cleanup does without running a
+  command.
+
+### Fixed
+
+- `reload` now logs `LIVE CLEANUP MODE ENABLED` (or the dry-run notice) when it changes
+  `DryRun`. Previously that line only appeared at startup, although the DatHost guide said
+  to look for it after a reload.
+
 ## [1.0.1] - 2026-09-12
 
 ### Changed
@@ -114,5 +145,6 @@ First release.
 - Cleanup of world objects that exist only as unloaded ZDOs is handled, but there is no
   region-scoped or biome-scoped rule set in this version.
 
+[1.0.2]: https://github.com/MacroMaster101/valheim-auto-cleanup/releases/tag/v1.0.2
 [1.0.1]: https://github.com/MacroMaster101/valheim-auto-cleanup/releases/tag/v1.0.1
 [1.0.0]: https://github.com/MacroMaster101/valheim-auto-cleanup/releases/tag/v1.0.0

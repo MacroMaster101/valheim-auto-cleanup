@@ -88,6 +88,7 @@ namespace ValheimAutoCleanup
 
         // [Logging]
         private readonly ConfigEntry<bool> _logCleanupSummary;
+        private readonly ConfigEntry<bool> _logCleanupReport;
         private readonly ConfigEntry<bool> _logDeletedItems;
         private readonly ConfigEntry<bool> _logProtectedItems;
         private readonly ConfigEntry<bool> _logDebugInformation;
@@ -227,10 +228,12 @@ namespace ValheimAutoCleanup
                     new AcceptableValueList<string>("TopLeft", "Center")));
 
             const string admin = "Admin";
-            _enableChatCommands = file.Bind(admin, "EnableChatCommands", true,
-                "Let server admins run cleanup commands by typing them in in-game chat. Only accounts listed in " +
-                "adminlist.txt are obeyed, and the check uses the connection's authenticated platform ID rather " +
-                "than the display name carried in the message. Vanilla clients need no mod for this.");
+            _enableChatCommands = file.Bind(admin, "EnableChatCommands", false,
+                "Let server admins run cleanup commands by typing them in in-game chat, from an unmodified client. " +
+                "Off by default; the command file below is the recommended channel on a rented server. Only " +
+                "accounts in adminlist.txt are obeyed, and every message is checked against the network connection " +
+                "it actually arrived on, so a modified client cannot pose as an admin. The server only sees chat " +
+                "while at least one other player is online.");
             _chatCommandPrefix = file.Bind(admin, "ChatCommandPrefix", "!autocleanup",
                 "Text an admin types in chat to run a command, for example: !autocleanup status");
             _enableCommandFile = file.Bind(admin, "EnableCommandFile", true,
@@ -241,6 +244,10 @@ namespace ValheimAutoCleanup
             const string logging = "Logging";
             _logCleanupSummary = file.Bind(logging, "LogCleanupSummary", true,
                 "Log a one-line summary after each pass.");
+            _logCleanupReport = file.Bind(logging, "LogCleanupReport", true,
+                "After each pass, log what was removed - or, in dry-run mode, what would be - grouped by item, " +
+                "and why everything else was kept. It is the same report the preview command prints, so you can " +
+                "see what the cleanup does without running any command.");
             _logDeletedItems = file.Bind(logging, "LogDeletedItems", false,
                 "Log every individual removal with prefab name, stack size and position. Verbose.");
             _logProtectedItems = file.Bind(logging, "LogProtectedItems", false,
@@ -294,6 +301,7 @@ namespace ValheimAutoCleanup
         public bool EnableCommandFile { get; private set; }
 
         public bool LogCleanupSummary { get; private set; }
+        public bool LogCleanupReport { get; private set; }
         public bool LogDeletedItems { get; private set; }
         public bool LogProtectedItems { get; private set; }
         public bool LogDebugInformation { get; private set; }
@@ -405,6 +413,7 @@ namespace ValheimAutoCleanup
             EnableCommandFile = _enableCommandFile.Value;
 
             LogCleanupSummary = _logCleanupSummary.Value;
+            LogCleanupReport = _logCleanupReport.Value;
             LogDeletedItems = _logDeletedItems.Value;
             LogProtectedItems = _logProtectedItems.Value;
             LogDebugInformation = _logDebugInformation.Value;

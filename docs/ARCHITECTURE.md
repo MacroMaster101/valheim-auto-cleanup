@@ -80,13 +80,15 @@ no patch:
 | Remove an object | `ZNetScene.Destroy` / `ZDOMan.DestroyZDO`, both public |
 | Player positions | `ZNet.GetConnectedPeers()`, public |
 | Announce to players | Invoke the vanilla `"Message"` routed RPC on the player's character |
-| Receive admin chat | **The one Harmony patch** — a postfix on `ZRoutedRpc.RouteRPC` |
-| Admin check | `ZNet.IsAdmin(hostName)`, public |
+| Receive admin chat | Two small Harmony patches, only when `EnableChatCommands` is on |
+| Admin check | `ZNet.IsAdmin(hostName)` on the verified connection, public |
 
-The single patch lives in `Patches/ChatMessagePatch.cs` and is applied only on the server,
-and only when `EnableChatCommands` is on. It is a **postfix** on `ZRoutedRpc.RouteRPC` that
-parses a copy of the payload and swallows every failure, so routing is already complete
-before it runs and it cannot delay, alter or drop anyone's chat.
+The chat patches live in `Patches/` and are applied only on the server, and only when
+`EnableChatCommands` is on (it is off by default). `ChatMessagePatch` is a **postfix** on
+`ZRoutedRpc.RouteRPC` that parses a copy of the payload and swallows every failure, so
+routing is already complete before it runs and it cannot delay, alter or drop anyone's
+chat. `RoutedRpcReceivePatch` is a prefix and finalizer on `ZRoutedRpc.RPC_RoutedRPC` that
+only records which connection the message arrived on; **Security** below explains why.
 
 Two earlier approaches were implemented and both failed, for separate reasons found by
 reading the game:
@@ -263,16 +265,20 @@ All three call the same `Commands.Execute`.
 
 ### How admin chat works without a client mod
 
-Chat is a routed RPC named `"ChatMessage"`. `ZRoutedRpc.RPC_RoutedRPC` invokes the local
-handler for any message addressed to everybody *before* forwarding it on, and a dedicated
-server registers `Chat.RPC_ChatMessage` for that name like any client would. So the server
-already receives a copy of every broadcast chat message; the patch above simply observes it.
-Forwarding to the other players is a separate code path and is untouched.
+Chat is a routed RPC named `"ChatMessage"`. A client sends one copy per online player, each
+addressed to that player, and every copy passes through the server, which forwards it with
+`ZRoutedRpc.RouteRPC`. The postfix on `RouteRPC` observes those copies; forwarding itself is
+untouched.
 
-**Security.** The `UserInfo` inside a chat message is supplied by the sending client and is
-not trusted. The admin check resolves the sender's peer and reads the platform ID from its
-authenticated socket (`peer.m_socket.GetHostName()`), then calls `ZNet.IsAdmin` — the same
-value Valheim uses for `adminlist.txt`. Anything unresolvable is "not an admin".
+**Security.** Nothing inside a chat message identifies its sender reliably. The `UserInfo`
+and display name are written by the client, and so is the routed RPC's sender ID:
+`RoutedRPCData.Deserialize` reads it straight from the packet, and `RPC_RoutedRPC` never
+compares it with the connection it arrived on. Versions before 1.0.2 trusted that ID, so a
+modified client could pose as an online admin. Now `RoutedRpcReceivePatch` records the
+connection each routed RPC arrived on, and `ChatSenderCheck` obeys a command only when the
+claimed sender is that connection. The admin check then reads the platform ID from the
+verified connection's socket (`peer.m_socket.GetHostName()`) and calls `ZNet.IsAdmin` — the
+same value Valheim uses for `adminlist.txt`. Anything unresolvable is "not an admin".
 
 ### Announcements
 

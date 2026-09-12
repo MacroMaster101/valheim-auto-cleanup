@@ -118,11 +118,90 @@ namespace ValheimAutoCleanup.Models
             return sb.ToString();
         }
 
+        /// <summary>
+        /// A readable multi-line report of one pass: what was removed (or, in a dry run, what
+        /// would be), grouped by prefab, and why everything else was kept. The preview command
+        /// prints it, and so does every pass while <c>LogCleanupReport</c> is on. Zero-valued
+        /// lines are omitted.
+        /// </summary>
+        /// <param name="heading">First line of the report.</param>
+        /// <param name="dryRun">True when nothing was actually removed.</param>
+        /// <param name="maxPrefabs">How many prefabs to list before summarising the rest.</param>
+        public string BuildReport(string heading, bool dryRun, int maxPrefabs = 10)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(heading);
+            sb.AppendLine("  Objects examined : " + TotalObjectsScanned);
+            sb.AppendLine("  Loose drops found: " + ItemDropsFound);
+            sb.AppendLine(dryRun
+                ? "  Would remove     : " + DryRunCandidates
+                : "  Removed          : " + Deleted);
+
+            var failed = OwnershipFailures + DeletionFailures;
+            if (failed > 0)
+            {
+                sb.AppendLine("  Failed to remove : " + failed);
+            }
+
+            if (RemovalsByPrefab.Count > 0)
+            {
+                // Largest first; ties by name so the report is stable from pass to pass.
+                var top = new List<KeyValuePair<string, int>>(RemovalsByPrefab);
+                top.Sort((a, b) =>
+                {
+                    var byAmount = b.Value.CompareTo(a.Value);
+                    return byAmount != 0 ? byAmount : string.Compare(a.Key, b.Key, StringComparison.OrdinalIgnoreCase);
+                });
+
+                var shown = Math.Min(Math.Max(maxPrefabs, 0), top.Count);
+                sb.AppendLine("  Top prefabs:");
+                for (var i = 0; i < shown; i++)
+                {
+                    sb.AppendLine("    " + top[i].Key + ": " + top[i].Value);
+                }
+
+                if (top.Count > shown)
+                {
+                    sb.AppendLine("    ... and " + (top.Count - shown) + " more");
+                }
+            }
+
+            if (TotalProtected + BudgetExhausted + InvalidObjects > 0)
+            {
+                sb.AppendLine("  Kept:");
+                AppendLine(sb, "players nearby     ", PlayerProtected);
+                AppendLine(sb, "players recently   ", RecentPlayerProtected);
+                AppendLine(sb, "not old enough     ", TooYoung);
+                AppendLine(sb, "whitelisted        ", Whitelisted);
+                AppendLine(sb, "important items    ", ImportantItemProtected);
+                AppendLine(sb, "equipment          ", EquipmentProtected);
+                AppendLine(sb, "upgraded           ", UpgradedItemProtected);
+                AppendLine(sb, "large stacks       ", LargeStackProtected);
+                AppendLine(sb, "inside a base      ", BaseProtected);
+                AppendLine(sb, "inside a ward      ", WardProtected);
+                AppendLine(sb, "near world spawn   ", WorldSpawnProtected);
+                AppendLine(sb, "not on blacklist   ", BlacklistFiltered);
+                AppendLine(sb, "not a loose drop   ", NotALooseDrop);
+                AppendLine(sb, "per-pass limit     ", BudgetExhausted);
+                AppendLine(sb, "invalid or unknown ", InvalidObjects);
+            }
+
+            return sb.ToString().TrimEnd();
+        }
+
         private static void Append(StringBuilder sb, string label, int value)
         {
             if (value > 0)
             {
                 sb.Append(' ').Append(label).Append('=').Append(value);
+            }
+        }
+
+        private static void AppendLine(StringBuilder sb, string label, int value)
+        {
+            if (value > 0)
+            {
+                sb.AppendLine("    " + label + ": " + value);
             }
         }
     }

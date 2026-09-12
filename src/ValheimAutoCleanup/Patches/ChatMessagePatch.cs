@@ -4,8 +4,9 @@ using HarmonyLib;
 namespace ValheimAutoCleanup.Patches
 {
     /// <summary>
-    /// The plugin's ONLY Harmony patch: it lets the server observe in-game chat so that
-    /// admins can run cleanup commands from an unmodified client.
+    /// Lets the server observe in-game chat so that admins can run cleanup commands from an
+    /// unmodified client. It works together with <see cref="RoutedRpcReceivePatch"/>, which
+    /// supplies the network connection each message really arrived on.
     ///
     /// WHY IT HOOKS ROUTING RATHER THAN Chat.RPC_ChatMessage
     /// -----------------------------------------------------
@@ -32,6 +33,13 @@ namespace ValheimAutoCleanup.Patches
     /// <c>RPC_RoutedRPC</c> calls <c>RouteRPC</c> for anything not addressed to itself, and
     /// that call is guarded by <c>m_server</c>. Hooking there is the only place a dedicated
     /// server reliably sees chat.
+    ///
+    /// WHO SENT IT
+    /// -----------
+    /// <c>RoutedRPCData.m_senderPeerID</c> is read from the packet the client wrote, and
+    /// Valheim never checks it against the connection, so it is only a claim. The listener
+    /// is handed both the claim and <see cref="RoutedRpcReceivePatch.CurrentConnection"/>,
+    /// and obeys a command only when the two agree.
     ///
     /// SAFETY
     /// ------
@@ -68,7 +76,7 @@ namespace ValheimAutoCleanup.Patches
                 var text = ReadChatText(rpcData.m_parameters);
                 if (!string.IsNullOrEmpty(text))
                 {
-                    listener.OnChatMessage(rpcData.m_senderPeerID, rpcData.m_msgID, text);
+                    listener.OnChatMessage(RoutedRpcReceivePatch.CurrentConnection, rpcData.m_senderPeerID, text);
                 }
             }
             catch (Exception)
@@ -106,7 +114,7 @@ namespace ValheimAutoCleanup.Patches
             copy.ReadInt();              // Talker.Type
 
             var sender = new UserInfo();
-            sender.Deserialize(ref copy); // sender, not trusted - the admin check uses the peer
+            sender.Deserialize(ref copy); // sender, not trusted - identity comes from the connection
 
             return copy.ReadString();     // text
         }

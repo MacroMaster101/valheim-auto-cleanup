@@ -1,5 +1,6 @@
 using System;
 using BepInEx.Logging;
+using ValheimAutoCleanup.Policy;
 
 namespace ValheimAutoCleanup.Server
 {
@@ -18,11 +19,13 @@ namespace ValheimAutoCleanup.Server
     ///
     /// SECURITY
     /// --------
-    /// The <c>UserInfo</c> carried inside a chat message is supplied by the sending client
-    /// and must not be trusted; neither may the display name. The admin check resolves the
-    /// sender's peer and uses the platform ID from its authenticated socket, which is the
-    /// same value Valheim itself uses for adminlist.txt. Anything that cannot be resolved is
-    /// treated as "not an admin", and a non-admin typing the command prefix is ignored.
+    /// Nothing inside a chat message identifies its sender reliably. The <c>UserInfo</c> and
+    /// display name are written by the sending client, and so is the routed RPC's sender ID:
+    /// Valheim reads it from the packet and never checks it against the connection. A command
+    /// is therefore obeyed only when that claimed ID matches the connection the message really
+    /// arrived on (<see cref="ChatSenderCheck"/>), and the admin check then uses that
+    /// connection's platform ID - the same value Valheim itself uses for adminlist.txt.
+    /// Anything that cannot be resolved is treated as "not an admin".
     /// </summary>
     internal sealed class ChatCommandListener
     {
@@ -57,7 +60,10 @@ namespace ValheimAutoCleanup.Server
         /// Handles one observed chat message. Returns immediately for anything that is not an
         /// admin command, which is the overwhelming majority of messages.
         /// </summary>
-        internal void OnChatMessage(long senderPeerId, long messageId, string text)
+        /// <param name="connection">The connection the message arrived on, or null if unknown.</param>
+        /// <param name="claimedSenderPeerId">The sender ID written inside the message. Untrusted.</param>
+        /// <param name="text">The chat text.</param>
+        internal void OnChatMessage(ZRpc connection, long claimedSenderPeerId, string text)
         {
             try
             {
@@ -78,13 +84,31 @@ namespace ValheimAutoCleanup.Server
                     return;
                 }
 
+                var peer = ResolveConnection(connection);
+                switch (ChatSenderCheck.Verify(claimedSenderPeerId, peer?.m_uid))
+                {
+                    case ChatSenderVerdict.Verified:
+                        break;
+
+                    case ChatSenderVerdict.Mismatch:
+                        _log.LogWarning(
+                            "Ignoring a cleanup command that claims to come from peer " + claimedSenderPeerId +
+                            " but arrived on the connection of " + Describe(peer) +
+                            ". A modified client may be trying to pose as another player.");
+                        return;
+
+                    default:
+                        _log.LogInfo("Ignoring a cleanup command whose sending connection could not be identified.");
+                        return;
+                }
+
                 // The same command arrives once per connected player; run it only once.
-                if (IsDuplicate(senderPeerId, trimmed))
+                if (IsDuplicate(peer.m_uid, trimmed))
                 {
                     return;
                 }
 
-                if (!IsAdmin(senderPeerId, out var who))
+                if (!IsAdmin(peer, out var who))
                 {
                     _log.LogInfo("Ignoring a cleanup command from a non-admin connection (" + who + ").");
                     return;
@@ -101,7 +125,7 @@ namespace ValheimAutoCleanup.Server
                 }
 
                 _broadcaster.Reply(
-                    senderPeerId,
+                    peer.m_uid,
                     Commands.Flatten(output, MaxChatReplyLines),
                     _config.AnnouncementPrefix);
             }
@@ -133,21 +157,54 @@ namespace ValheimAutoCleanup.Server
         }
 
         /// <summary>
-        /// Resolves the sender's authenticated platform ID and checks it against the server's
-        /// admin list. Anything that cannot be resolved is treated as "not an admin".
+        /// The connected peer that owns this connection, or null.
+        ///
+        /// <c>ZNet.GetPeer(ZRpc)</c> is private, so the connection is matched against the
+        /// connected peers by reference - the same comparison that method makes.
         /// </summary>
-        private static bool IsAdmin(long senderPeerId, out string description)
+        private static ZNetPeer ResolveConnection(ZRpc connection)
         {
-            description = "peer " + senderPeerId;
-
-            var znet = ZNet.instance;
-            if (znet == null)
+            if (connection == null)
             {
-                return false;
+                return null;
             }
 
-            var peer = znet.GetPeer(senderPeerId);
-            if (peer == null || peer.m_socket == null)
+            var znet = ZNet.instance;
+            var peers = znet == null ? null : znet.GetConnectedPeers();
+            if (peers == null)
+            {
+                return null;
+            }
+
+            for (var i = 0; i < peers.Count; i++)
+            {
+                var peer = peers[i];
+                if (peer != null && ReferenceEquals(peer.m_rpc, connection))
+                {
+                    return peer;
+                }
+            }
+
+            return null;
+        }
+
+        private static string Describe(ZNetPeer peer)
+        {
+            return peer == null
+                ? "an unknown connection"
+                : (peer.m_playerName ?? "unknown") + " / peer " + peer.m_uid;
+        }
+
+        /// <summary>
+        /// Checks a verified peer's platform ID against the server's admin list. Anything that
+        /// cannot be resolved is treated as "not an admin".
+        /// </summary>
+        private static bool IsAdmin(ZNetPeer peer, out string description)
+        {
+            description = Describe(peer);
+
+            var znet = ZNet.instance;
+            if (znet == null || peer.m_socket == null)
             {
                 return false;
             }

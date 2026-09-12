@@ -14,7 +14,7 @@ namespace ValheimAutoCleanup
     {
         public const string Guid = "io.github.macromaster101.valheimautocleanup";
         public const string Name = "Valheim Auto Cleanup";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.2";
     }
 
     /// <summary>
@@ -28,9 +28,10 @@ namespace ValheimAutoCleanup
     /// the plugin is present, apart from the optional cleanup announcements - which are
     /// delivered through Valheim's own on-screen message RPC.
     ///
-    /// It applies exactly one Harmony patch, only when admin chat commands are enabled, and
-    /// only on the server. See <see cref="ChatMessagePatch"/> for why no patch-free
-    /// alternative exists.
+    /// It applies Harmony patches only when admin chat commands are enabled, and only on the
+    /// server: <see cref="ChatMessagePatch"/> observes chat (it explains why no patch-free
+    /// alternative exists) and <see cref="RoutedRpcReceivePatch"/> records which connection
+    /// each message arrived on, so the sender can be verified.
     ///
     /// If the plugin finds itself loaded in a client that is not hosting, it says so once and
     /// then does nothing at all for the rest of the session.
@@ -53,6 +54,9 @@ namespace ValheimAutoCleanup
         private bool _active;
         private bool _shuttingDown;
         private bool _consoleCommandRegistered;
+
+        /// <summary>The dry-run state the log last reported, so a change can be announced.</summary>
+        private bool _loggedDryRun;
 
         private void Awake()
         {
@@ -123,16 +127,7 @@ namespace ValheimAutoCleanup
                 : "Host (listen server) detected.");
             _log.LogInfo("Server-side cleanup active.");
 
-            if (_config.DryRun)
-            {
-                _log.LogInfo("Dry-run mode is active. No items will be removed.");
-            }
-            else
-            {
-                _log.LogWarning(
-                    "LIVE CLEANUP MODE ENABLED. Eligible dropped items may be permanently removed. " +
-                    "Make sure you have a world backup.");
-            }
+            LogCleanupMode();
 
             if (!_config.Enabled)
             {
@@ -215,10 +210,36 @@ namespace ValheimAutoCleanup
             }
         }
 
+        /// <summary>
+        /// Says which mode cleanup is in. Called at startup and whenever a reload changes it,
+        /// so an operator who switches DryRun off and reloads sees that confirmed in the log
+        /// rather than having to wait for the next pass.
+        /// </summary>
+        private void LogCleanupMode()
+        {
+            _loggedDryRun = _config.DryRun;
+
+            if (_config.DryRun)
+            {
+                _log.LogInfo("Dry-run mode is active. No items will be removed.");
+            }
+            else
+            {
+                _log.LogWarning(
+                    "LIVE CLEANUP MODE ENABLED. Eligible dropped items may be permanently removed. " +
+                    "Make sure you have a world backup.");
+            }
+        }
+
         private void OnConfigReloaded()
         {
             _manager?.ApplyConfigChange();
             _commandFile?.EnsureExists();
+
+            if (_active && _config.DryRun != _loggedDryRun)
+            {
+                LogCleanupMode();
+            }
 
             if (_active)
             {
@@ -250,6 +271,10 @@ namespace ValheimAutoCleanup
             {
                 ChatMessagePatch.Listener = _chatCommands;
                 _harmony = new Harmony(PluginInfo.Guid);
+
+                // The receive patch goes first. Without it the chat patch sees no connection
+                // and ignores every command - safe, but useless.
+                _harmony.PatchAll(typeof(RoutedRpcReceivePatch));
                 _harmony.PatchAll(typeof(ChatMessagePatch));
 
                 _log.LogInfo(

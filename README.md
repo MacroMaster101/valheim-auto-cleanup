@@ -19,7 +19,7 @@
 | **Name** | Valheim Auto Cleanup |
 | **GUID** | `io.github.macromaster101.valheimautocleanup` |
 | **Author** | MacroMaster101 |
-| **Version** | 1.0.1 |
+| **Version** | 1.0.2 |
 | **Licence** | MIT |
 | **Requires** | BepInEx 5 (`denikson-BepInExPack_Valheim`) on the **server only** |
 
@@ -124,14 +124,17 @@ has been near gets a single timestamp, and stays protected for
 `RecentPlayerProtectionSeconds` after the last sighting. The table is pruned every pass, so
 it cannot grow without bound.
 
-**One Harmony patch, and why.** Admin chat commands need the server to observe chat.
+**Two small Harmony patches, and why.** Admin chat commands need the server to observe chat.
 Current Valheim sends chat to each player *individually* rather than broadcasting it
 (`Chat.CheckPermissionsAndSendChatMessageRPCsAsync` walks `ZNet.GetPlayerList()`), so a
 dedicated server is never an addressee and `Chat.RPC_ChatMessage` never runs there. The one
-place a server does see chat is when it forwards it, so the patch is a postfix on
+place a server does see chat is when it forwards it, so one patch is a postfix on
 `ZRoutedRpc.RouteRPC`. It runs after routing completes, parses a copy of the payload, and
-swallows all failures, so it cannot affect anyone's chat. It is applied only when
-`EnableChatCommands` is on.
+swallows all failures, so it cannot affect anyone's chat. The sender ID inside a routed
+message is written by the client and Valheim never checks it, so a second patch — a prefix on
+`ZRoutedRpc.RPC_RoutedRPC` — records which connection each message really arrived on, and a
+command is obeyed only when the two match. Both are applied only when `EnableChatCommands`
+is on, and it is off by default.
 
 **Chat commands need another player online.** A player's own message is handled locally and
 never routed off their client, so when the admin is alone the server sees nothing to act on.
@@ -188,7 +191,8 @@ nothing in this plugin can bring the server down.
    ```
    DRY RUN: 37 items would have been removed. Set DryRun = false in the config to make cleanup live.
    ```
-   Run `preview` (see Commands) to see exactly which prefabs those were.
+   The same breakdown is logged after every pass (`LogCleanupReport`), and `preview`
+   (see Commands) prints it on demand.
 8. **Make a world backup.**
 9. Set `DryRun = false` when you are happy with what it reports.
 
@@ -235,12 +239,14 @@ Any player whose account is in `adminlist.txt` can type commands straight into c
 !autocleanup status
 ```
 
-The reply appears as an on-screen notice, and the full output goes to the server log. The
-admin check uses the connection's authenticated platform ID, not the name in the message,
-so it cannot be spoofed. Non-admins typing the prefix are ignored.
+The reply appears as an on-screen notice, and the full output goes to the server log.
+Nothing inside a chat message is trusted to say who sent it: each message is matched against
+the network connection it arrived on, and the admin check then uses that connection's
+platform ID, so a modified client cannot pose as an admin. Non-admins typing the prefix are
+ignored.
 
-Change the prefix with `ChatCommandPrefix`, or turn the whole channel off with
-`EnableChatCommands = false` (which also means no Harmony patch is applied at all).
+This channel is **off by default**. Turn it on with `EnableChatCommands = true` and change
+the prefix with `ChatCommandPrefix`; left off, no Harmony patches are applied at all.
 
 > **Limitation.** Valheim sends chat to each player individually, and a player's own message
 > is never routed off their client. A dedicated server therefore only observes chat while at
@@ -499,9 +505,10 @@ narrower scan. Please open an issue.
 - **Valheim:** verified against **1.0.12 (network version 40)**. Every game API the plugin
   uses, and every behaviour it relies on, is re-checked against the shipped assembly rather
   than assumed.
-- **Other server mods:** one Harmony patch only — a postfix on `ZRoutedRpc.RouteRPC`, and
-  only when `EnableChatCommands` is on. It runs after routing and changes nothing, so it
-  coexists with other chat mods. Set `EnableChatCommands = false` to apply no patches at all.
+- **Other server mods:** two small Harmony patches — a postfix on `ZRoutedRpc.RouteRPC` and a
+  prefix on `ZRoutedRpc.RPC_RoutedRPC` — and only when `EnableChatCommands` is on, which is
+  off by default. Neither changes what the game does, so they coexist with other chat mods.
+  With chat commands off, no patches are applied at all.
 - **Dependencies:** BepInEx 5 only. No Jötunn, no ServerSync.
 
 ---
@@ -560,7 +567,7 @@ Build a Thunderstore package:
 ./build/package.sh          # or: pwsh ./build/package.ps1
 ```
 
-which produces `dist/ValheimAutoCleanup-1.0.1.zip` containing exactly
+which produces `dist/ValheimAutoCleanup-1.0.2.zip` containing exactly
 `ValheimAutoCleanup.dll`, `README.md`, `CHANGELOG.md`, `manifest.json` and `icon.png`.
 
 ---

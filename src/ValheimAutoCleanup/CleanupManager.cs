@@ -291,9 +291,15 @@ namespace ValheimAutoCleanup
 
             if (trigger == CleanupTrigger.Preview)
             {
+                for (var i = 0; i < _removalQueue.Count; i++)
+                {
+                    stats.Record(CleanupDecision.DryRunCandidate);
+                    stats.CountRemoval(_removalQueue[i].PrefabName, _removalQueue[i].Stack);
+                }
+
                 stopwatch.Stop();
                 stats.ExecutionMilliseconds = stopwatch.ElapsedMilliseconds;
-                LogPreview(stats);
+                _log.LogInfo(stats.BuildReport("Cleanup preview (nothing was removed):", dryRun: true));
                 Cleanup(stats, dryRun: true, trigger, stopwatch);
                 yield break;
             }
@@ -378,6 +384,15 @@ namespace ValheimAutoCleanup
             if (_config.LogCleanupSummary)
             {
                 _log.LogInfo(stats.BuildSummary(dryRun));
+            }
+
+            // The same breakdown the preview command prints, so an operator can see what a
+            // pass did without having to ask. Skipped when there was nothing on the ground.
+            if (_config.LogCleanupReport && stats.ItemDropsFound > 0)
+            {
+                _log.LogInfo(stats.BuildReport(
+                    dryRun ? "Cleanup report (dry run, nothing was removed):" : "Cleanup report:",
+                    dryRun));
             }
 
             if (dryRun && stats.DryRunCandidates > 0)
@@ -495,61 +510,6 @@ namespace ValheimAutoCleanup
             _removalQueue.Clear();
             _scanner.ReleaseCandidates();
             _running = null;
-        }
-
-        private void LogPreview(CleanupStatistics stats)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("Cleanup preview (nothing was removed):");
-            sb.AppendLine("  Objects examined : " + stats.TotalObjectsScanned);
-            sb.AppendLine("  Loose drops found: " + stats.ItemDropsFound);
-            sb.AppendLine("  Would remove     : " + _removalQueue.Count);
-
-            var byPrefab = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            for (var i = 0; i < _removalQueue.Count; i++)
-            {
-                var candidate = _removalQueue[i];
-                byPrefab.TryGetValue(candidate.PrefabName, out var count);
-                byPrefab[candidate.PrefabName] = count + candidate.Stack;
-            }
-
-            if (byPrefab.Count > 0)
-            {
-                sb.AppendLine("  Top prefabs:");
-                var top = new List<KeyValuePair<string, int>>(byPrefab);
-                top.Sort((a, b) => b.Value.CompareTo(a.Value));
-
-                var limit = Math.Min(10, top.Count);
-                for (var i = 0; i < limit; i++)
-                {
-                    sb.AppendLine("    " + top[i].Key + ": " + top[i].Value);
-                }
-            }
-
-            sb.AppendLine("  Kept:");
-            AppendIfAny(sb, "    players nearby     : ", stats.PlayerProtected);
-            AppendIfAny(sb, "    players recently   : ", stats.RecentPlayerProtected);
-            AppendIfAny(sb, "    not old enough     : ", stats.TooYoung);
-            AppendIfAny(sb, "    whitelisted        : ", stats.Whitelisted);
-            AppendIfAny(sb, "    important items    : ", stats.ImportantItemProtected);
-            AppendIfAny(sb, "    equipment          : ", stats.EquipmentProtected);
-            AppendIfAny(sb, "    upgraded           : ", stats.UpgradedItemProtected);
-            AppendIfAny(sb, "    large stacks       : ", stats.LargeStackProtected);
-            AppendIfAny(sb, "    inside a base      : ", stats.BaseProtected);
-            AppendIfAny(sb, "    inside a ward      : ", stats.WardProtected);
-            AppendIfAny(sb, "    near world spawn   : ", stats.WorldSpawnProtected);
-            AppendIfAny(sb, "    not on blacklist   : ", stats.BlacklistFiltered);
-            AppendIfAny(sb, "    invalid or unknown : ", stats.InvalidObjects);
-
-            _log.LogInfo(sb.ToString().TrimEnd());
-        }
-
-        private static void AppendIfAny(StringBuilder sb, string label, int value)
-        {
-            if (value > 0)
-            {
-                sb.AppendLine(label + value);
-            }
         }
 
         /// <summary>

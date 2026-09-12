@@ -8,7 +8,8 @@ plugin at anything real.
 - Server: Valheim dedicated + BepInEx + `ValheimAutoCleanup.dll`
 - Client: **completely vanilla** Valheim, no BepInEx, no mods
 - Config: start from defaults, then change only what each test names
-- Add your account to `adminlist.txt` so the chat commands are available
+- Add your account to `adminlist.txt` and set `EnableChatCommands = true` so the chat
+  commands are available (they are off by default)
 - Keep the server log open (DatHost: **Console**)
 
 Two settings make testing much faster:
@@ -177,6 +178,15 @@ pass runs. The file returns to its `#` header.
 4. Have a **non-admin** type `!autocleanup now`.
 
 **Expect:** ignored. Log notes a command from a non-admin connection. No pass runs.
+
+5. Let a scheduled pass run with drops on the ground, without running any command.
+
+**Expect:** after the `Cleanup complete` line, a `Cleanup report` block listing the top
+prefabs and why the rest were kept.
+
+The sender-spoofing fix from 1.0.2 cannot be exercised from a vanilla client, which always
+sends its own ID; `ChatSenderCheckTests` covers the rule. A rejected spoof appears in the log
+as `Ignoring a cleanup command that claims to come from peer ...`.
 
 ---
 
