@@ -13,9 +13,9 @@
     <Company>MacroMaster101</Company>
     <Authors>MacroMaster101</Authors>
     <Description>Server-side automatic dropped-item cleanup for Valheim dedicated servers. Vanilla clients supported.</Description>
-    <Version>1.0.2</Version>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
+    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
     <Copyright>Copyright (c) 2026 MacroMaster101</Copyright>
 
     <!-- Deterministic, dependency-free output: exactly one DLL. -->
