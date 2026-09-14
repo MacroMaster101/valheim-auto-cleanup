@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The "cleanup finished" announcement ignored `AnnouncementStyle`.** It was hardcoded to the
+  corner notice, so a server set to `Center` showed its warnings as the large banner and then
+  delivered the result somewhere else entirely. It now uses the configured style, like the
+  warnings already did.
+
+### Changed
+
+- `PlayerProtectionRadius` now defaults to **50** metres (was 25). 25 m covered little more
+  than the ground a player was standing on; 50 m covers a build site or the area a fight
+  ranges over. The proximity test is one squared-distance comparison per item per player, so
+  a larger radius costs nothing — it only means fewer items are eligible.
+- `AnnouncementStyle` now defaults to **`Center`** (was `TopLeft`). The corner notice is easy
+  to miss mid-fight, which defeats the point of a warning that exists to make people pick
+  their loot up. `TopLeft` is still the choice when you want the message kept in the player's
+  in-game message log — `MessageHud` only writes a log entry for that style.
+
+Existing installs keep the values already saved in their config file; these defaults apply to
+fresh installs.
+
 ## [1.0.2] - 2026-09-12
 
 ### Security
