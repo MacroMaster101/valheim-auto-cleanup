@@ -412,7 +412,7 @@ namespace ValheimAutoCleanup
                             ? "Cleanup finished (dry run): " + removed + " old dropped items would have been removed."
                             : "Cleanup finished: " + removed + " old dropped items removed.",
                         _config.AnnouncementPrefix,
-                        AnnouncementStyle.TopLeft);
+                        _config.AnnouncementStyle);
                 }
             }
 

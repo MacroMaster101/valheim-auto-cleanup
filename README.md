@@ -323,7 +323,7 @@ before that pass can touch it. Loot dropped 30 seconds before a scan is safe.
 | Setting | Default |
 |---|---|
 | `ProtectNearPlayers` | `true` |
-| `PlayerProtectionRadius` | `25` |
+| `PlayerProtectionRadius` | `50` |
 | `ProtectRecentlyNearbyItems` | `true` |
 | `RecentPlayerProtectionSeconds` | `180` |
 
@@ -403,7 +403,7 @@ the server log and nothing breaks.
 | `FinalWarningMessage` | see config | |
 | `CleanupCompleteMessageEnabled` | `false` | |
 | `AnnouncementPrefix` | `[Server]` | Prefixed to every announcement |
-| `AnnouncementStyle` | `TopLeft` | `TopLeft` (corner notice, also written to the player's message log) or `Center` (large banner, louder but leaves no record) |
+| `AnnouncementStyle` | `Center` | `TopLeft` (corner notice, also written to the player's message log) or `Center` (large banner, louder but leaves no record) |
 
 Out-of-range lead times are clamped with a log line rather than rejected.
 

@@ -128,7 +128,7 @@ namespace ValheimAutoCleanup
             const string playerProtection = "PlayerProtection";
             _protectNearPlayers = file.Bind(playerProtection, "ProtectNearPlayers", true,
                 "Never remove an item that a connected player is standing near.");
-            _playerProtectionRadius = file.Bind(playerProtection, "PlayerProtectionRadius", 25f,
+            _playerProtectionRadius = file.Bind(playerProtection, "PlayerProtectionRadius", 50f,
                 new ConfigDescription(
                     "Radius in metres around every connected player inside which items are never removed.",
                     new AcceptableValueRange<float>(ConfigLimits.MinRadius, ConfigLimits.MaxRadius)));
@@ -219,7 +219,7 @@ namespace ValheimAutoCleanup
             _announcementPrefix = file.Bind(warnings, "AnnouncementPrefix", "[Server]",
                 "Text placed in front of every announcement, so players can see it came from the server. " +
                 "Leave empty for no prefix.");
-            _announcementStyle = file.Bind(warnings, "AnnouncementStyle", "TopLeft",
+            _announcementStyle = file.Bind(warnings, "AnnouncementStyle", "Center",
                 new ConfigDescription(
                     "Where announcements appear on screen. TopLeft is the small corner notice used for pickups; " +
                     "it is also written to the player's in-game message log, so it can be read after the fact. " +
